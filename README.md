@@ -13,7 +13,7 @@ It seems to have a jitter of ~5-10ns:
 ![testing PWM jitter on RV1103](doc/testing_pwm_jitter_on_RV1103.gif)
 
 #### Stability
-There are gaps up to ~70us on the PWM output when using a period of 100ns:
+There are gaps up to ~70us on the PWM output when using small duty cycles (~10ns):
 ![testing PWM stability on RV1103](doc/testing_pwm_stability_on_RV1103.png)
 
-This does not seem to happen when  increasing the period to 200/300 ns.
+This does not seem to happen when increasing the duty cycle to >20ns.
