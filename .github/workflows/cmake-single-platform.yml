@@ -27,5 +27,6 @@ jobs:
       options: --mount type=volume,source=luckfox-pico,target=/home
     steps:
       - name: Configure CMake
-        run: ls -lR ${{github.workspace}} ; ls -lR $GITHUB_WORKSPACE ; ls -lR $GITHUB_WORKSPACE/..
+        run: ls -lR / ; echo ${{github.workspace}} 
+        #; ls -lR $GITHUB_WORKSPACE ; ls -lR $GITHUB_WORKSPACE/..
         #cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}  ${{github.workspace}}/test_programs/hello_world # $GITHUB_WORKSPACE
