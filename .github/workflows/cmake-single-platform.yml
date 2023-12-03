@@ -13,6 +13,9 @@ jobs:
   prepare_container_and_build:
     runs-on: ubuntu-latest
     container: luckfoxtech/luckfox_pico:1.0
+    env:
+      ARCH: "arm"
+      CROSS_COMPILE: "/build_env/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
