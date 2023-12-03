@@ -30,17 +30,17 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
 
-      - name: dump
-        run: |
-          echo 'github.workspace === ${{ github.workspace }}'
-          echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
-          echo 'runner.workspace === ${{ runner.workspace }}'
-          echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
-          ls -lR $GITHUB_WORKSPACE
+      #- name: dump
+      #  run: |
+      #    echo 'github.workspace === ${{ github.workspace }}'
+      #    echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
+      #    echo 'runner.workspace === ${{ runner.workspace }}'
+      #    echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
+      #    ls -lR $GITHUB_WORKSPACE
 
       - name: Publish Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: my-rv1103-artifacts
-          path: $GITHUB_WORKSPACE/build/hello_world
+          path: ${{ github.workspace }}/build/hello_world
 
