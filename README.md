@@ -4,6 +4,10 @@
 
 ## RV1103
 ### PWM
-Even if the unit is a nanosecond, apparently the minimum resolution of the provided firmware kernel (Linux luckfox 5.10.110) is 10ns.
-![testing PWM resolution on RV1103](doc/testing_pwm_on_RV1103.png)
-And it seems to have a jitter of ~5-10ns.
+#### Resolution
+Even if the unit is a nanosecond, apparently the minimum resolution of the provided firmware kernel (Linux luckfox 5.10.110) is 10ns: 
+![testing PWM resolution on RV1103](doc/testing_pwm_resolution_on_RV1103.png)
+
+#### Jitter
+It seems to have a jitter of ~5-10ns:
+![testing PWM jitter on RV1103](doc/testing_pwm_jitteer_on_RV1103.png)
