@@ -11,3 +11,7 @@ Even if the unit is a nanosecond, apparently the minimum resolution of the provi
 #### Jitter
 It seems to have a jitter of ~5-10ns:
 ![testing PWM jitter on RV1103](doc/testing_pwm_jitter_on_RV1103.gif)
+
+#### Stability
+There are gaps up to ~70us on the PWM output:
+![testing PWM stability on RV1103](doc/testing_pwm_stability_on_RV1103.png)
