@@ -10,4 +10,4 @@ Even if the unit is a nanosecond, apparently the minimum resolution of the provi
 
 #### Jitter
 It seems to have a jitter of ~5-10ns:
-![testing PWM jitter on RV1103](doc/testing_pwm_jitteer_on_RV1103.png)
+![testing PWM jitter on RV1103](doc/testing_pwm_jitter_on_RV1103.gif)
