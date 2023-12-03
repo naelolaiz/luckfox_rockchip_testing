@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Checkout SDK
-        run: rm -rf /home ; git clone https://github.com/LuckfoxTECH/luckfox-pico /home
+        run: git clone https://github.com/LuckfoxTECH/luckfox-pico /build_env
       - name: debug
         run: ls -lR / ; echo ${{github.workspace}} 
       - name: Configure CMake
