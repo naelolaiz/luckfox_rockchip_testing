@@ -20,13 +20,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-#      - name: dump
-#        run: |
-#          echo 'github.workspace === ${{ github.workspace }}'
-#          echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
-#          echo 'runner.workspace === ${{ runner.workspace }}'
-#          echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
-#
+      - name: dump
+        run: |
+          echo 'github.workspace === ${{ github.workspace }}'
+          echo "GITHUB_WORKSPACE === $GITHUB_WORKSPACE"
+          echo 'runner.workspace === ${{ runner.workspace }}'
+          echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
+          ls -lR /build_env
+
       - name: Checkout SDK
         run: git clone https://github.com/LuckfoxTECH/luckfox-pico /build_env
 
