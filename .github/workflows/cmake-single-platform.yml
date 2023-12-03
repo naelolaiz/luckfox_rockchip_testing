@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout SDK
-        run: git clone https://github.com/LuckfoxTECH/luckfox-pico /build_env
+        run: git clone https://github.com/LuckfoxTECH/luckfox-pico.git /build_env
 
       - name: dump
         run: |
