@@ -3,7 +3,10 @@
 * [SDK](https://github.com/LuckfoxTECH/luckfox-pico)
 
 ## Cross-compiling with cmake
+Following instructions in [https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/](https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/), using docker image ```luckfoxtech/luckfox_pico:1.0``` with the [SDK](https://github.com/LuckfoxTECH/luckfox-pico) mounted in the container in ```/home```.
+
 See examples in [test_programs folder](test_programs/)
+
 ![Cross-compiling and running a hello world application](doc/cross_compiling_and_running_hello_world.png)
 
 ## RV1103
@@ -21,4 +24,3 @@ There are gaps up to ~70us on the PWM output when using small duty cycles (~10ns
 ![testing PWM stability on RV1103](doc/testing_pwm_stability_on_RV1103.png)
 
 This does not seem to happen when increasing the duty cycle to >20ns.
-
