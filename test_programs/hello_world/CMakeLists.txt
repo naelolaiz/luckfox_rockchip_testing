@@ -1,8 +1,10 @@
 project(hello_world)
 
 # which compilers to use for C and C++
-set(CMAKE_C_COMPILER   arm-rockchip830-linux-uclibcgnueabihf-gcc)
-set(CMAKE_CXX_COMPILER arm-rockchip830-linux-uclibcgnueabihf-g++)
+set(CMAKE_C_COMPILER
+    /build_env/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/arm-rockchip830-linux-uclibcgnueabihf-gcc)
+set(CMAKE_CXX_COMPILER
+    /build_env/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/arm-rockchip830-linux-uclibcgnueabihf-g++)
 
 # where is the target environment located
 # This expectes to use the container luckfoxtech/luckfox_pico:1.0 with mounted https://github.com/LuckfoxTECH/luckfox-pico.git. See https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/
