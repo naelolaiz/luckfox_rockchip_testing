@@ -20,6 +20,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout SDK
+        run: git clone https://github.com/LuckfoxTECH/luckfox-pico /build_env
+
       - name: dump
         run: |
           echo 'github.workspace === ${{ github.workspace }}'
@@ -27,9 +30,6 @@ jobs:
           echo 'runner.workspace === ${{ runner.workspace }}'
           echo "RUNNER_WORKSPACE === $RUNNER_WORKSPACE"
           ls -lR /build_env
-
-      - name: Checkout SDK
-        run: git clone https://github.com/LuckfoxTECH/luckfox-pico /build_env
 
       - name: Cmake configure
         run: cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs/hello_world
