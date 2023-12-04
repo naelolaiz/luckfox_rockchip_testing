@@ -5,11 +5,10 @@
 ## Cross-compiling with cmake
 Following instructions in [https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/](https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/), using docker image ```luckfoxtech/luckfox_pico:1.0``` with the [SDK](https://github.com/LuckfoxTECH/luckfox-pico) mounted in the container in ```/home```.
 
-See examples in [test_programs folder](test_programs/)
-
 ![Cross-compiling and running a hello world application](doc/cross_compiling_and_running_hello_world.png)
 ### Tests programs
-See [test_programs](test_programs).
+See examples in [test_programs folder](test_programs/).
+
 Compiled binaries published in [gitlab actions](https://github.com/naelolaiz/luckfox_rockchip_testing/actions/) jobs.
 
 ## RV1103
