@@ -1,6 +1,7 @@
-project(blink_pin_4)
+set(target_name blink_pin_4)
 
-add_executable(${PROJECT_NAME} main.cpp
+add_executable(${target_name} main.cpp
     GPIO.h
     PWM.h)
-target_include_directories(${PROJECT_NAME} PUBLIC .)
+
+target_include_directories(${target_name} PUBLIC .)

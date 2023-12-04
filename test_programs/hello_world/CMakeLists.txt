@@ -1,3 +1,3 @@
-project(hello_world)
+set(target_name hello_world)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${target_name} main.cpp)
