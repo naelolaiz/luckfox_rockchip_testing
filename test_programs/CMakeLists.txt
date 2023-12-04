@@ -1,0 +1,2 @@
+add_subdirectory(hello_world)
+add_subdirectory(blink_pin_4)
