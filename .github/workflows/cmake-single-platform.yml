@@ -31,7 +31,10 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
-          path: |
-            ${{ github.workspace }}/build/blink_pin_4/blink_pin_4
-            ${{ github.workspace }}/build/hello_world/hello_world
+          path: ${{ github.workspace }}/build/blink_pin_4/blink_pin_4
+      - name: Publish Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test_programs
+          path: ${{ github.workspace }}/build/hello_world/hello_world
 
