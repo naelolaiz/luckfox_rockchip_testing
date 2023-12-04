@@ -1,4 +1,7 @@
 # Testing Luckfox Pico RISC-V boards.
+
+![Pico board](doc/Luckfox-Pico-1-1100x1100w.jpg)
+
 * [WIKI](https://wiki.luckfox.com/Luckfox-Pico/Luckfox-Pico-quick-start/)
 * [SDK](https://github.com/LuckfoxTECH/luckfox-pico)
 
