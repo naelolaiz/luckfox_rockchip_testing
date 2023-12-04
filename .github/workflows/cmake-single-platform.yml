@@ -32,5 +32,4 @@ jobs:
         with:
           name: test_programs
           path: |
-            ${{ github.workspace }}/build/hello_world/hello_world
-            ${{ github.workspace }}/build/blink_pin_4/blink_pin_4
+            ${{ github.workspace }}/build/**/*
