@@ -27,9 +27,11 @@ jobs:
         run: |
              cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs
              cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
+             ls -lR $GITHUB_WORKSPACE/build
       - name: Publish Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
           path: |
-            ${{ github.workspace }}/build/**/*
+            ${{ github.workspace }}/build/test_programs/blink_pin_4/blink_pin_4
+            ${{ github.workspace }}/build/test_programs/hello_world/hello_world
