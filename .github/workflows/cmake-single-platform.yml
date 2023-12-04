@@ -23,16 +23,22 @@ jobs:
       - name: Checkout SDK
         run: git clone https://github.com/LuckfoxTECH/luckfox-pico.git /build_env
 
-      - name: Cmake configure
-        run: cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs/hello_world
-
-      - name: Build
-        # Build your program with the given configuration
-        run: cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
-
+      - name: Build Hello World
+        run: |
+             cmake -B  $GITHUB_WORKSPACE/build_hello_world -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs/hello_world
+             cmake --build $GITHUB_WORKSPACE/build_hello_world --config ${{env.BUILD_TYPE}}
       - name: Publish Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: hello_world
-          path: ${{ github.workspace }}/build/hello_world
+          path: ${{ github.workspace }}/build_hello_world/hello_world
 
+      - name: Build blink GPIO
+        run: |
+             cmake -B  $GITHUB_WORKSPACE/build_blink_pin_4 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs/blink_pin_4
+             cmake --build $GITHUB_WORKSPACE/build_blink_pin_4 --config ${{env.BUILD_TYPE}}
+      - name: Publish Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: blink_pin_4
+          path: ${{ github.workspace }}/build_blink_pin_4/blink_pin_4
