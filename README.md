@@ -4,6 +4,10 @@
 
 * [WIKI](https://wiki.luckfox.com/Luckfox-Pico/Luckfox-Pico-quick-start/)
 * [SDK](https://github.com/LuckfoxTECH/luckfox-pico)
+* [Luckfox-Pico series schematic diagram](https://files.luckfox.com/wiki/Luckfox-Pico/PDF/SCH/Luckfox%20Pico%20%E5%8E%9F%E7%90%86%E5%9B%BE.7z)
+* [RV1106 Datasheet](https://files.luckfox.com/wiki/Luckfox-Pico/PDF/Rockchip%20RV1106%20Datasheet%20V1.3-20230522.pdf)
+* [RV1103 Datasheet](https://files.luckfox.com/wiki/Luckfox-Pico/PDF/doc.7z)
+* [Extra info](https://wiki.luckfox.com/Luckfox-Pico/Datasheets/)
 
 ## Cross-compiling with cmake
 Following instructions in [https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/](https://wiki.luckfox.com/Luckfox-Pico/Core3566-SDK/), using docker image ```luckfoxtech/luckfox_pico:1.0``` with the [SDK](https://github.com/LuckfoxTECH/luckfox-pico) mounted in the container in ```/home```.
