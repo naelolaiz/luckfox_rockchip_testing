@@ -77,13 +77,13 @@ main(int argc, char* argv[])
       if (argv[i] == "--help") {
         printHelp();
         return 0;
-      } else if (argv[i] == "--sleepMs") {
+      } else if (std::string(argv[i]) == "--sleepMs") {
         updateSleepInMs = atoi(argv[++i]);
-      } else if (argv[i] == "--updateStep") {
+      } else if (std::string(argv[i]) == "--updateStep") {
         updateStep = atof(argv[++i]);
-      } else if (argv[i] == "--servo1Freq") {
+      } else if (std::string(argv[i]) == "--servo1Freq") {
         servo1Freq = atof(argv[++i]);
-      } else if (argv[i] == "--servo2Freq") {
+      } else if (std::string(argv[i]) == "--servo2Freq") {
         servo2Freq = atof(argv[++i]);
       } else {
         printHelp();
