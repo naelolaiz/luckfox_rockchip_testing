@@ -60,19 +60,20 @@ int
 main(int argc, char* argv[])
 {
   auto printHelp = [&argv]() {
-    std::cout << " Usage: " << argv[0]
-              << " [--help] [--sleepMs 100] [--updateStep 0.1] "
-                 "[--servo1Freq 1.0] [--servo2Freq 2.0] [--servo1IP 0.0] "
-                 "[--servo2IP 0.25]"
-              << std::endl;
+    std::cout
+      << " Usage: " << argv[0]
+      << " [--help] [--sleepMs 100] [--updateStep 0.1] "
+         "[--servoPitchFreq 1.0] [--servoYawFreq 2.0] [--servoPitchIP 0.0] "
+         "[--servoYawIP 0.25]"
+      << std::endl;
   };
 
   size_t updateSleepInMs = 100u;
   float updateStep = 0.1f;
-  float servo1Freq = 1.f;
-  float servo2Freq = 2.f;
-  float servo1InitialNormalizedPhase = 0.f;
-  float servo2InitialNormalizedPhase = 0.25f;
+  float servoPitchFreq = 1.f;
+  float servoYawFreq = 2.f;
+  float servoPitchInitialNormalizedPhase = 0.f;
+  float servoYawInitialNormalizedPhase = 0.25f;
 
   constexpr auto twoPi = 2 * M_PI;
 
@@ -86,33 +87,33 @@ main(int argc, char* argv[])
         updateSleepInMs = atoi(argv[++i]);
       } else if (std::string(argv[i]) == "--updateStep") {
         updateStep = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servo1Freq") {
-        servo1Freq = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servo2Freq") {
-        servo2Freq = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servo1IP") {
-        servo1InitialNormalizedPhase = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servo2IP") {
-        servo2InitialNormalizedPhase = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servoPitchFreq") {
+        servoPitchFreq = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servoYawFreq") {
+        servoYawFreq = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servoPitchIP") {
+        servoPitchInitialNormalizedPhase = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servoYawIP") {
+        servoYawInitialNormalizedPhase = atof(argv[++i]);
       } else {
         printHelp();
         return -1;
       }
     }
   }
-  const auto servo1InitialPhase = servo1InitialNormalizedPhase * twoPi;
-  const auto servo2InitialPhase = servo2InitialNormalizedPhase * twoPi;
+  const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
+  const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
 
-  auto servo1 = Servo(10, 0);
-  auto servo2 = Servo(11, 0);
+  auto servoPitch = Servo(10, 0);
+  auto servoYaw = Servo(11, 0);
 
-  servo1.setupAndStart();
-  servo2.setupAndStart();
+  servoPitch.setupAndStart();
+  servoYaw.setupAndStart();
 
   while (true) {
     for (float f = 0.f; f < twoPi; f += updateStep) {
-      servo1.setValue(sin(servo1InitialPhase + f * servo1Freq));
-      servo2.setValue(sin(servo2InitialPhase + f * servo2Freq));
+      servoPitch.setValue(sin(servoPitchInitialPhase + f * servoPitchFreq));
+      servoYaw.setValue(sin(servoYawInitialPhase + f * servoYawFreq));
       std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
     };
   }
