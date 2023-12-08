@@ -78,13 +78,13 @@ main(int argc, char* argv[])
         printHelp();
         return 0;
       } else if (argv[i] == "--sleepMs") {
-        updateSleepInMs = atoi(argv[i++]);
+        updateSleepInMs = atoi(argv[++i]);
       } else if (argv[i] == "--updateStep") {
-        updateStep = atof(argv[i++]);
+        updateStep = atof(argv[++i]);
       } else if (argv[i] == "--servo1Freq") {
-        servo1Freq = atof(argv[i++]);
+        servo1Freq = atof(argv[++i]);
       } else if (argv[i] == "--servo2Freq") {
-        servo2Freq = atof(argv[i++]);
+        servo2Freq = atof(argv[++i]);
       } else {
         printHelp();
         return -1;
