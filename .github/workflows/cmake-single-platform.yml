@@ -29,10 +29,14 @@ jobs:
              cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
 
       - name: Find executable test programs
-        run: find $GITHUB_WORKSPACE/build -type f -executable -print > executables.txt
+        id: prepare
+        run: |
+          executables=$(find $GITHUB_WORKSPACE/build -type f -executable -print | tr '\n' ',')
+          executables="${executables%,}" # Remove the trailing comma
+          echo "::set-output name=executables::$executables"
 
       - name: Publish Test Programs Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
-          path: @executables.txt
+          path: ${{ steps.prepare.outputs.executables }}
