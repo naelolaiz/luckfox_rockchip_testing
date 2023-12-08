@@ -26,7 +26,6 @@ jobs:
       - name: Build test programs
         run: |
              cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/build/install
-#             cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
              cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}} --target install
       - name: Publish Artifacts
         uses: actions/upload-artifact@v3
