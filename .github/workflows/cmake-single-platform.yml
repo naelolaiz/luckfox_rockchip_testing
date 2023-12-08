@@ -31,12 +31,11 @@ jobs:
       - name: Find executable test programs
         id: prepare
         run: |
-          executables=$(find $GITHUB_WORKSPACE/build -type f -executable -print | tr '\n' ',')
-          executables="${executables%,}" # Remove the trailing comma
-          echo "::set-output name=executables::$executables"
+          echo "executables=$(find $GITHUB_WORKSPACE/build -type f -executable -print | tr '\n' ',')" >> $GITHUB_ENV
+          echo "executables=${executables%,}" >> $GITHUB_ENV # Remove the trailing comma
 
       - name: Publish Test Programs Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
-          path: ${{ steps.prepare.outputs.executables }}
+          path: ${{ env.executables }}
