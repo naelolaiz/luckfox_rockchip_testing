@@ -27,14 +27,12 @@ jobs:
         run: |
              cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs
              cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
-      - name: Publish Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: test_programs
-          path: ${{ github.workspace }}/build/blink_pin_4/blink_pin_4
-      - name: Publish Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: test_programs
-          path: ${{ github.workspace }}/build/hello_world/hello_world
 
+      - name: Find executable test programs
+        run: find $GITHUB_WORKSPACE/build -type f -executable -print > executables.txt
+
+      - name: Publish Test Programs Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test_programs
+          path: @executables.txt
