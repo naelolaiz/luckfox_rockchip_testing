@@ -62,7 +62,8 @@ main(int argc, char* argv[])
   auto printHelp = [&argv]() {
     std::cout << " Usage: " << argv[0]
               << " [--help] [--sleepMs 100] [--updateStep 0.1] "
-                 "[--servo1Freq 1.0] [--servo2Freq 1.0]"
+                 "[--servo1Freq 1.0] [--servo2Freq 2.0] [--servo1IP 0.0] "
+                 "[--servo2IP 0.25]"
               << std::endl;
   };
 
@@ -70,6 +71,10 @@ main(int argc, char* argv[])
   float updateStep = 0.1f;
   float servo1Freq = 1.f;
   float servo2Freq = 2.f;
+  float servo1InitialNormalizedPhase = 0.f;
+  float servo2InitialNormalizedPhase = 0.25f;
+
+  constexpr auto twoPi = 2 * M_PI;
 
   if (argc > 1) {
 
@@ -85,12 +90,18 @@ main(int argc, char* argv[])
         servo1Freq = atof(argv[++i]);
       } else if (std::string(argv[i]) == "--servo2Freq") {
         servo2Freq = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servo1IP") {
+        servo1InitialNormalizedPhase = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--servo2IP") {
+        servo2InitialNormalizedPhase = atof(argv[++i]);
       } else {
         printHelp();
         return -1;
       }
     }
   }
+  const auto servo1InitialPhase = servo1InitialNormalizedPhase * twoPi;
+  const auto servo2InitialPhase = servo2InitialNormalizedPhase * twoPi;
 
   auto servo1 = Servo(10, 0);
   auto servo2 = Servo(11, 0);
@@ -99,9 +110,9 @@ main(int argc, char* argv[])
   servo2.setupAndStart();
 
   while (true) {
-    for (float f = 0.f; f < 360; f += updateStep) {
-      servo1.setValue(sin(f * servo1Freq));
-      servo2.setValue(cos(f * servo2Freq));
+    for (float f = 0.f; f < twoPi; f += updateStep) {
+      servo1.setValue(sin(servo1InitialPhase + f * servo1Freq));
+      servo2.setValue(sin(servo2InitialPhase + f * servo2Freq));
       std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
     };
   }
