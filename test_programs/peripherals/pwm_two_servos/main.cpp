@@ -1,6 +1,8 @@
 #include "PWM.h"
 #include <cmath>
-#include <thread> // For std::this_thread::sleep_for
+#include <cstdlib>
+#include <iostream>
+#include <thread>
 
 class Servo
 {
@@ -55,8 +57,40 @@ private:
 };
 
 int
-main()
+main(int argc, char* argv[])
 {
+  auto printHelp = [&argv]() {
+    std::cout << " Usage: " << argv[0]
+              << " [--help] [--sleepMs 100] [--updateStep 0.1] "
+                 "[--servo1Freq 1.0] [--servo2Freq 1.0]"
+              << std::endl;
+  };
+
+  size_t updateSleepInMs = 100u;
+  float updateStep = 0.1f;
+  float servo1Freq = 1.f;
+  float servo2Freq = 2.f;
+
+  if (argc > 1) {
+
+    for (size_t i = 1; i < argc; i++) {
+      if (argv[i] == "--help") {
+        printHelp();
+        return 0;
+      } else if (argv[i] == "--sleepMs") {
+        updateSleepInMs = atoi(argv[i++]);
+      } else if (argv[i] == "--updateStep") {
+        updateStep = atof(argv[i++]);
+      } else if (argv[i] == "--servo1Freq") {
+        servo1Freq = atof(argv[i++]);
+      } else if (argv[i] == "--servo2Freq") {
+        servo2Freq = atof(argv[i++]);
+      } else {
+        printHelp();
+        return -1;
+      }
+    }
+  }
 
   auto servo1 = Servo(10, 0);
   auto servo2 = Servo(11, 0);
@@ -65,10 +99,10 @@ main()
   servo2.setupAndStart();
 
   while (true) {
-    for (float f = 0.f; f < 360; f += .1) {
-      servo1.setValue(sin(f));
-      servo2.setValue(cos(f));
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    for (float f = 0.f; f < 360; f += updateStep) {
+      servo1.setValue(sin(f * servo1Freq));
+      servo2.setValue(cos(f * servo2Freq));
+      std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
     };
   }
 
