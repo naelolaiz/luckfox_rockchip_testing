@@ -25,17 +25,11 @@ jobs:
 
       - name: Build test programs
         run: |
-             cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs
-             cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
-
-      - name: Find executable test programs
-        id: prepare
-        run: |
-          echo "executables=$(find $GITHUB_WORKSPACE/build -type f -executable -print | sed 's|$GITHUB_WORKSPACE/||' | tr '\n' ',')" >> $GITHUB_ENV         
-          echo "executables=${executables%,}" >> $GITHUB_ENV # Remove the trailing comma
-
-      - name: Publish Test Programs Artifacts
+             cmake -B  $GITHUB_WORKSPACE/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} $GITHUB_WORKSPACE/test_programs -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/build/install
+#             cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}}
+             cmake --build $GITHUB_WORKSPACE/build --config ${{env.BUILD_TYPE}} --target install
+      - name: Publish Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
-          path: ${{ env.executables }}
+          path: ${{ github.workspace }}/build/install/bin/*
