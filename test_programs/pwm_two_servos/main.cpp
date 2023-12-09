@@ -232,7 +232,7 @@ main(int argc, char* argv[])
   }
 
   size_t currentCycle = 0;
-  double currentGain = cyclesForSpiral != 0 ? 1. : 0.;
+  double currentGain = cyclesForSpiral == 0 ? 1. : 0.;
   while (!signalReceived) {
 
     if (cyclesForSpiral != 0) {
