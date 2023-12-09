@@ -140,9 +140,11 @@ main(int argc, char* argv[])
       << " Usage: " << argv[0]
       << " [--help] [--sleepMs 100] [--updateStep 0.1] "
          "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
-         "0.02*1e9/50] [--servoPitchMaxValInNs 0.12*1e9/50] [--servoYawFreq "
-         "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 0.02*1e9/50] "
-         "[--servoYawMaxValInNs 0.12*1e9/50] [--enableLaser 4]"
+         "0.02*1e9/50=400000] [--servoPitchMaxValInNs 0.12*1e9/50=2400000] "
+         "[--servoYawFreq "
+         "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 400000] "
+         "[--servoYawMaxValInNs 2400000] [--enableLaser 4] [--spiral "
+         "cycles_to_reach_max_val]"
       << std::endl;
   };
 
@@ -156,6 +158,7 @@ main(int argc, char* argv[])
   size_t servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
   size_t servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
   size_t servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  size_t cyclesForSpiral = 0; // 0 = no changes
 
   size_t updateSleepInMs = 100u;
   float updateStep = 0.1f;
@@ -198,6 +201,8 @@ main(int argc, char* argv[])
         servoYawMinNsDutyCycle = atoi(argv[++i]);
       } else if (currentArg == "--servoYawMaxValInNs") {
         servoYawMaxNsDutyCycle = atoi(argv[++i]);
+      } else if (currentArg == "--spiral") {
+        cyclesForSpiral = atoi(argv[++i]);
       } else {
         printHelp();
         return -1;
@@ -226,12 +231,26 @@ main(int argc, char* argv[])
     laserPointer.setValue(true);
   }
 
+  size_t currentCycle = 0;
+  double currentGain = cyclesForSpiral != 0 ? 1. : 0.;
   while (!signalReceived) {
+
+    if (cyclesForSpiral != 0) {
+      currentGain = static_cast<double>(currentCycle) / cyclesForSpiral;
+    }
     for (float f = 0.f; f < twoPi; f += updateStep) {
-      servoPitch.setValue(sin(servoPitchInitialPhase + f * servoPitchFreq));
-      servoYaw.setValue(sin(servoYawInitialPhase + f * servoYawFreq));
+      if (signalReceived) {
+        break;
+      }
+      servoPitch.setValue(currentGain *
+                          sin(servoPitchInitialPhase + f * servoPitchFreq));
+      servoYaw.setValue(currentGain *
+                        sin(servoYawInitialPhase + f * servoYawFreq));
       std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
-    };
+    }
+    if (cyclesForSpiral != 0 && ++currentCycle == cyclesForSpiral) {
+      currentCycle = 0;
+    }
   }
   if (enableLaser) {
     laserPointer.disable();
