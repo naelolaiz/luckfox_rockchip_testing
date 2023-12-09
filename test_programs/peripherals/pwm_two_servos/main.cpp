@@ -142,11 +142,11 @@ main(int argc, char* argv[])
          "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
          "0.02*1e9/50] [--servoPitchMaxValInNs 0.12*1e9/50] [--servoYawFreq "
          "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 0.02*1e9/50] "
-         "[--servoYawMaxValInNs 0.12*1e9/50] [--enableLaser 51]"
+         "[--servoYawMaxValInNs 0.12*1e9/50] [--enableLaser 4]"
       << std::endl;
   };
 
-  constexpr int DEFAULT_GPIO_NR_FOR_LASER = 51;
+  constexpr int DEFAULT_GPIO_NR_FOR_LASER = 4;
   constexpr size_t SERVO_PITCH_PWM_CHIP_NR = 10;
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
