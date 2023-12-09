@@ -7,7 +7,9 @@
 
 start() {
 	echo "Starting script: "
-        /pwm_two_servos --sleepMs 1 --updateStep 0.03 --servoYawFreq 1 --servoPitchFreq 2 --servoPitchIP 0.0 --servoYawIP 0.25 --servoYawMaxValInNs 850000 --servoYawMinValInNs 650000 --servoPitchMaxValInNs 1600000 --servoPitchMinValInNs 1400000 --enableLaser 4 --spiral 20 &
+        /pwm_two_servos --sleepMs 1 --updateStep 0.03  --enableLaser 4 --spiral 20 \
+                        --servoYawFreq 1   --servoYawIP 0.25  --servoYawMaxValInNs 850000    --servoYawMinValInNs 650000 \
+                        --servoPitchFreq 2 --servoPitchIP 0.0 --servoPitchMaxValInNs 1600000 --servoPitchMinValInNs 1400000 &
 	echo "OK"
 }
 stop() {
