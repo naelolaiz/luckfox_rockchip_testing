@@ -32,5 +32,5 @@ jobs:
         with:
           name: test_programs
           path: |
-            ${{ github.workspace }}/build/install/bin/*
-            ${{ github.workspace }}/build/install/etc/init.d/*
+            build/install/bin/*
+            build/install/etc/init.d/*
