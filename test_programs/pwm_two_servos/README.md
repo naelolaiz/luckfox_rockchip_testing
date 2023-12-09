@@ -10,7 +10,7 @@ https://www.thingiverse.com/thing:3458238
 https://www.katranji.com/tocimages/files/336817-121153.pdf
 
 ## Circuit diagram
-Notice that a common ground connection is missing from any of the uC ground pins (pin 3, 8, 13, 18, 38, 33, 28 or 23)
+Notice that a common ground connection is missing from any of the SoC board ground pins (pin 3, 8, 13, 18, 38, 33, 28 or 23)
 ![Circuit diagram](doc/circuit_diagram.jpg)
 
 ## use examples
