@@ -5,7 +5,6 @@
 #include <csignal>
 #include <cstdlib>
 #include <iostream>
-#include <optional>
 #include <thread>
 
 volatile sig_atomic_t signalReceived = 0;
@@ -180,17 +179,15 @@ main(int argc, char* argv[])
   const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
   const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
 
-  auto laserPointer = enableLaser
-                        ? std::make_optional<LaserPointer>(GPIO_NR_FOR_LASER)
-                        : std::nullopt;
+  LaserPointer laserPointer(GPIO_NR_FOR_LASER);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR, SERVO_PITCH_PWM_NR);
   auto servoYaw = Servo(SERVO_YAW_PWM_CHIP_NR, SERVO_YAW_PWM_NR);
 
   servoPitch.setupAndStart();
   servoYaw.setupAndStart();
-  if (laserPointer) {
-    laserPointer->enable();
-    laserPointer->setValue(true);
+  if (enableLaser) {
+    laserPointer.enable();
+    laserPointer.setValue(true);
   }
 
   while (!signalReceived) {
@@ -200,8 +197,8 @@ main(int argc, char* argv[])
       std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
     };
   }
-  if (laserPointer) {
-    laserPointer->disable();
+  if (enableLaser) {
+    laserPointer.disable();
   }
 
   return 0;
