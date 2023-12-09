@@ -3,7 +3,7 @@
 ## servos
 https://www.handsontec.com/dataspecs/motor_fan/MG996R.pdf
 
-## servos cases
+## servo cases
 https://www.thingiverse.com/thing:3458238
 
 ## LED pointer
