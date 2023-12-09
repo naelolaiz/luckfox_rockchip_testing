@@ -10,7 +10,7 @@ https://www.thingiverse.com/thing:3458238
 https://www.katranji.com/tocimages/files/336817-121153.pdf
 
 ## Circuit diagram
-TODO
+![Circuit diagram](doc/circuit_diagram.jpg)
 
 ## use examples
 ### "Hearth" 
