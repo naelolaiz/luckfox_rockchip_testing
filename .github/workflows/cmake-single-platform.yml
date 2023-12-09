@@ -31,4 +31,6 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test_programs
-          path: ${{ github.workspace }}/build/install/bin/*
+          path: |
+            ${{ github.workspace }}/build/install/bin/*
+            ${{ github.workspace }}/build/install/etc/init.d/*
