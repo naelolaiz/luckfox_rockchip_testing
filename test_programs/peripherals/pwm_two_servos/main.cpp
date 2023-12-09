@@ -17,10 +17,20 @@ signalHandler(int signal)
 class Servo
 {
 public:
-  Servo(int chipNr, int pwmNr)
+  Servo(int chipNr,
+        int pwmNr,
+        size_t minDutyCycleInNs = ABSOLUTE_MIN_DUTY_CYCLE_IN_NS,
+        size_t maxDutyCycleInNs = ABSOLUTE_MAX_DUTY_CYCLE_IN_NS)
     : mChipNr(chipNr)
     , mPwmNr(pwmNr)
+    , mMinDutyCycleInNs(minDutyCycleInNs)
+    , mMaxDutyCycleInNs(maxDutyCycleInNs)
+    , mDutyCycleMidRange((mMaxDutyCycleInNs - mMinDutyCycleInNs) / 2u)
   {
+    if (mMinDutyCycleInNs < ABSOLUTE_MIN_DUTY_CYCLE_IN_NS ||
+        mMaxDutyCycleInNs > ABSOLUTE_MAX_DUTY_CYCLE_IN_NS) {
+      throw std::runtime_error("???");
+    }
   }
 
   ~Servo()
@@ -47,23 +57,25 @@ public:
       throw std::runtime_error("invalid value");
     }
     mCurrentValue = value;
-    auto dutyCycleInNs =
-      MIN_DUTY_CYCLE_IN_NS + (1 + value) * DUTY_CYCLE_MID_RANGE;
+    auto dutyCycleInNs = mMinDutyCycleInNs + (1 + value) * mDutyCycleMidRange;
     PWM::setDutyCycleInNs(mChipNr, mPwmNr, dutyCycleInNs);
   }
 
 private:
   static constexpr size_t FIFTY_HZ_PERIOD_IN_NS = 1E9 / 50u; // 50Hz period
-  static constexpr size_t MIN_DUTY_CYCLE_IN_NS =
-    FIFTY_HZ_PERIOD_IN_NS / 50u; // 2%
-  static constexpr size_t MAX_DUTY_CYCLE_IN_NS =
-    6u * FIFTY_HZ_PERIOD_IN_NS / 50u; // 12%
-  static constexpr size_t DUTY_CYCLE_MID_RANGE =
-    (MAX_DUTY_CYCLE_IN_NS - MIN_DUTY_CYCLE_IN_NS) / 2u;
   float mCurrentValue{ 0.f };
   const size_t mChipNr;
   const size_t mPwmNr;
   bool mStarted{ false };
+  const size_t mMinDutyCycleInNs;
+  const size_t mMaxDutyCycleInNs;
+  const size_t mDutyCycleMidRange;
+
+public:
+  static constexpr size_t ABSOLUTE_MIN_DUTY_CYCLE_IN_NS =
+    FIFTY_HZ_PERIOD_IN_NS / 50u; // 2%
+  static constexpr size_t ABSOLUTE_MAX_DUTY_CYCLE_IN_NS =
+    6u * FIFTY_HZ_PERIOD_IN_NS / 50u; // 12%
 };
 
 class LaserPointer
@@ -127,8 +139,10 @@ main(int argc, char* argv[])
     std::cout
       << " Usage: " << argv[0]
       << " [--help] [--sleepMs 100] [--updateStep 0.1] "
-         "[--servoPitchFreq 1.0] [--servoYawFreq 2.0] [--servoPitchIP 0.0] "
-         "[--servoYawIP 0.25] [--enableLaser 51]"
+         "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
+         "0.02*1e9/50] [--servoPitchMaxValInNs 0.12*1e9/50] [--servoYawFreq "
+         "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 0.02*1e9/50] "
+         "[--servoYawMaxValInNs 0.12*1e9/50] [--enableLaser 51]"
       << std::endl;
   };
 
@@ -137,6 +151,11 @@ main(int argc, char* argv[])
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
   constexpr size_t SERVO_YAW_PWM_NR = 0;
+
+  size_t servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  size_t servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  size_t servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  size_t servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
 
   size_t updateSleepInMs = 100u;
   float updateStep = 0.1f;
@@ -152,24 +171,33 @@ main(int argc, char* argv[])
   if (argc > 1) {
 
     for (size_t i = 1; i < argc; i++) {
-      if (argv[i] == "--help") {
+      const auto currentArg = std::string(argv[i]);
+      if (currentArg == "--help") {
         printHelp();
         return 0;
-      } else if (std::string(argv[i]) == "--sleepMs") {
+      } else if (currentArg == "--sleepMs") {
         updateSleepInMs = atoi(argv[++i]);
-      } else if (std::string(argv[i]) == "--updateStep") {
+      } else if (currentArg == "--updateStep") {
         updateStep = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servoPitchFreq") {
+      } else if (currentArg == "--servoPitchFreq") {
         servoPitchFreq = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servoYawFreq") {
+      } else if (currentArg == "--servoYawFreq") {
         servoYawFreq = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servoPitchIP") {
+      } else if (currentArg == "--servoPitchIP") {
         servoPitchInitialNormalizedPhase = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--servoYawIP") {
+      } else if (currentArg == "--servoYawIP") {
         servoYawInitialNormalizedPhase = atof(argv[++i]);
-      } else if (std::string(argv[i]) == "--enableLaser") {
+      } else if (currentArg == "--enableLaser") {
         gpioNrForLaser = atoi(argv[++i]);
         enableLaser = true;
+      } else if (currentArg == "--servoPitchMinValInNs") {
+        servoPitchMinNsDutyCycle = atoi(argv[++i]);
+      } else if (currentArg == "--servoPitchMaxValInNs") {
+        servoPitchMaxNsDutyCycle = atoi(argv[++i]);
+      } else if (currentArg == "--servoYawMinValInNs") {
+        servoYawMinNsDutyCycle = atoi(argv[++i]);
+      } else if (currentArg == "--servoYawMaxValInNs") {
+        servoYawMaxNsDutyCycle = atoi(argv[++i]);
       } else {
         printHelp();
         return -1;
@@ -182,8 +210,14 @@ main(int argc, char* argv[])
   const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
 
   LaserPointer laserPointer(gpioNrForLaser);
-  auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR, SERVO_PITCH_PWM_NR);
-  auto servoYaw = Servo(SERVO_YAW_PWM_CHIP_NR, SERVO_YAW_PWM_NR);
+  auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
+                          SERVO_PITCH_PWM_NR,
+                          servoPitchMinNsDutyCycle,
+                          servoPitchMaxNsDutyCycle);
+  auto servoYaw = Servo(SERVO_YAW_PWM_CHIP_NR,
+                        SERVO_YAW_PWM_NR,
+                        servoYawMinNsDutyCycle,
+                        servoYawMaxNsDutyCycle);
 
   servoPitch.setupAndStart();
   servoYaw.setupAndStart();
