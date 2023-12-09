@@ -1,8 +1,19 @@
+#include "GPIO.h"
 #include "PWM.h"
+
 #include <cmath>
+#include <csignal>
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <thread>
+
+volatile sig_atomic_t signalReceived = 0;
+void
+signalHandler(int signal)
+{
+  signalReceived = 1;
+}
 
 class Servo
 {
@@ -56,6 +67,60 @@ private:
   bool mStarted{ false };
 };
 
+class LaserPointer
+{
+public:
+  LaserPointer(int gpioNr)
+    : mGpioNr(gpioNr)
+  {
+  }
+  ~LaserPointer()
+  {
+    if (mStarted) {
+      disable();
+    }
+  }
+  bool enable()
+  {
+    if (!GPIO::exportGPIO(mGpioNr)) {
+      std::cerr << "Failed to export GPIO pin " << mGpioNr << std::endl;
+      return false;
+    }
+
+    // Set GPIO direction to "out"
+    if (!GPIO::setDirection(mGpioNr, GPIO::Direction::OUT)) {
+      std::cerr << "Failed to set direction on GPIO pin " << mGpioNr
+                << std::endl;
+      return false;
+    }
+
+    mValueFileStream = GPIO::openGPIOValueFile(mGpioNr);
+    mStarted = true;
+    return true;
+  }
+  bool disable()
+  {
+    setValue(false);
+    mValueFileStream.close();
+    if (!GPIO::exportGPIO(mGpioNr, true)) {
+      std::cerr << "Failed to unexport GPIO pin " << mGpioNr << std::endl;
+      return false;
+    }
+    mStarted = false;
+    return true;
+  }
+
+  void setValue(bool value)
+  {
+    mValueFileStream << (value ? "1" : "0") << std::flush;
+  }
+
+private:
+  const int mGpioNr;
+  bool mStarted{ false };
+  std::ofstream mValueFileStream;
+};
+
 int
 main(int argc, char* argv[])
 {
@@ -64,9 +129,15 @@ main(int argc, char* argv[])
       << " Usage: " << argv[0]
       << " [--help] [--sleepMs 100] [--updateStep 0.1] "
          "[--servoPitchFreq 1.0] [--servoYawFreq 2.0] [--servoPitchIP 0.0] "
-         "[--servoYawIP 0.25]"
+         "[--servoYawIP 0.25] [--enableLaser]"
       << std::endl;
   };
+
+  constexpr int GPIO_NR_FOR_LASER = 57;
+  constexpr size_t SERVO_PITCH_PWM_CHIP_NR = 10;
+  constexpr size_t SERVO_PITCH_PWM_NR = 0;
+  constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
+  constexpr size_t SERVO_YAW_PWM_NR = 0;
 
   size_t updateSleepInMs = 100u;
   float updateStep = 0.1f;
@@ -74,6 +145,7 @@ main(int argc, char* argv[])
   float servoYawFreq = 2.f;
   float servoPitchInitialNormalizedPhase = 0.f;
   float servoYawInitialNormalizedPhase = 0.25f;
+  bool enableLaser = false;
 
   constexpr auto twoPi = 2 * M_PI;
 
@@ -95,27 +167,41 @@ main(int argc, char* argv[])
         servoPitchInitialNormalizedPhase = atof(argv[++i]);
       } else if (std::string(argv[i]) == "--servoYawIP") {
         servoYawInitialNormalizedPhase = atof(argv[++i]);
+      } else if (std::string(argv[i]) == "--enableLaser") {
+        enableLaser = true;
       } else {
         printHelp();
         return -1;
       }
     }
   }
+  std::signal(SIGINT, signalHandler);
+
   const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
   const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
 
-  auto servoPitch = Servo(10, 0);
-  auto servoYaw = Servo(11, 0);
+  auto laserPointer = enableLaser
+                        ? std::make_optional<LaserPointer>(GPIO_NR_FOR_LASER)
+                        : std::nullopt;
+  auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR, SERVO_PITCH_PWM_NR);
+  auto servoYaw = Servo(SERVO_YAW_PWM_CHIP_NR, SERVO_YAW_PWM_NR);
 
   servoPitch.setupAndStart();
   servoYaw.setupAndStart();
+  if (laserPointer) {
+    laserPointer->enable();
+    laserPointer->setValue(true);
+  }
 
-  while (true) {
+  while (!signalReceived) {
     for (float f = 0.f; f < twoPi; f += updateStep) {
       servoPitch.setValue(sin(servoPitchInitialPhase + f * servoPitchFreq));
       servoYaw.setValue(sin(servoYawInitialPhase + f * servoYawFreq));
       std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
     };
+  }
+  if (laserPointer) {
+    laserPointer->disable();
   }
 
   return 0;
