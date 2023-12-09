@@ -128,11 +128,11 @@ main(int argc, char* argv[])
       << " Usage: " << argv[0]
       << " [--help] [--sleepMs 100] [--updateStep 0.1] "
          "[--servoPitchFreq 1.0] [--servoYawFreq 2.0] [--servoPitchIP 0.0] "
-         "[--servoYawIP 0.25] [--enableLaser]"
+         "[--servoYawIP 0.25] [--enableLaser 51]"
       << std::endl;
   };
 
-  constexpr int GPIO_NR_FOR_LASER = 57;
+  constexpr int DEFAULT_GPIO_NR_FOR_LASER = 51;
   constexpr size_t SERVO_PITCH_PWM_CHIP_NR = 10;
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
@@ -145,6 +145,7 @@ main(int argc, char* argv[])
   float servoPitchInitialNormalizedPhase = 0.f;
   float servoYawInitialNormalizedPhase = 0.25f;
   bool enableLaser = false;
+  int gpioNrForLaser = DEFAULT_GPIO_NR_FOR_LASER;
 
   constexpr auto twoPi = 2 * M_PI;
 
@@ -167,6 +168,7 @@ main(int argc, char* argv[])
       } else if (std::string(argv[i]) == "--servoYawIP") {
         servoYawInitialNormalizedPhase = atof(argv[++i]);
       } else if (std::string(argv[i]) == "--enableLaser") {
+        gpioNrForLaser = atoi(argv[++i]);
         enableLaser = true;
       } else {
         printHelp();
@@ -179,7 +181,7 @@ main(int argc, char* argv[])
   const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
   const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
 
-  LaserPointer laserPointer(GPIO_NR_FOR_LASER);
+  LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR, SERVO_PITCH_PWM_NR);
   auto servoYaw = Servo(SERVO_YAW_PWM_CHIP_NR, SERVO_YAW_PWM_NR);
 
