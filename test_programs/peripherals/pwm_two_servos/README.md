@@ -19,3 +19,9 @@ q 1 --servoPitchIP 0.25 --servoYawIP 0.0 --servoYawMaxValInNs 1000000 --servoYaw
 MinValInNs 500000 --servoPitchMaxValInNs 1900000 --servoPitchMinValInNs 1300000 
    --enableLaser 4 --spiral 2
 
+### Lisajjous
+./pwm_two_servos --sleepMs 3 --updateStep 0.05 --servoYawFreq 1 --servoPitchFre
+q 2 --servoPitchIP 0.0 --servoYawIP 0.0 --servoYawMaxValInNs 1000000 --servoYawM
+inValInNs 500000 --servoPitchMaxValInNs 1900000 --servoPitchMinValInNs 1300000  
+  --enableLaser 4 --spiral 6
+
