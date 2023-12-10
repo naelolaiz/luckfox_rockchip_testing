@@ -138,7 +138,7 @@ main(int argc, char* argv[])
   auto printHelp = [&argv]() {
     std::cout
       << " Usage: " << argv[0]
-      << " [--help] [--sleepMs 100] [--updateStep 0.1] "
+      << " [--help] [--updateStep 0.05] "
          "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
          "0.02*1e9/50=400000] [--servoPitchMaxValInNs 0.12*1e9/50=2400000] "
          "[--servoYawFreq "
@@ -160,8 +160,8 @@ main(int argc, char* argv[])
   size_t servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
   size_t cyclesForSpiral = 0; // 0 = no changes
 
-  size_t updateSleepInMs = 100u;
-  float updateStep = 0.1f;
+  constexpr size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
+  float updateStep = 0.05f;
   float servoPitchFreq = 1.f;
   float servoYawFreq = 2.f;
   float servoPitchInitialNormalizedPhase = 0.f;
@@ -178,8 +178,6 @@ main(int argc, char* argv[])
       if (currentArg == "--help") {
         printHelp();
         return 0;
-      } else if (currentArg == "--sleepMs") {
-        updateSleepInMs = atoi(argv[++i]);
       } else if (currentArg == "--updateStep") {
         updateStep = atof(argv[++i]);
       } else if (currentArg == "--servoPitchFreq") {
