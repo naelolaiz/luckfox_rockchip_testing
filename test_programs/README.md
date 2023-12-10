@@ -16,3 +16,4 @@ An interface cmake target to include interface helpers as GPIO and PWM.
 
 ## pwm_two_servos
 Testing 3d printer: yaw and pitch of a laser pointer controlled by two servo motors.
+![lissajous curve projection](pwm_two_servos/doc/lissajous.gif)
