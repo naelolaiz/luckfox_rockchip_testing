@@ -147,7 +147,8 @@ main(int argc, char* argv[])
                  "0.02*1e9/50=400000] [--servoPitchMaxValInNs "
                  "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
                  "[--servoYawMaxValInNs 2400000] [--waitBetweenCycles 20] "
-                 "[--waitBetweenPaths 30] [--enableLaser 34] [--stride 1]"
+                 "[--waitBetweenPaths 30] [--enableLaser 34] [--stride 1] "
+                 "[--updateSleepInMs 20]"
               << std::endl;
   };
 
@@ -156,14 +157,14 @@ main(int argc, char* argv[])
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
   constexpr size_t SERVO_YAW_PWM_NR = 0;
-  constexpr size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
+  size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
 
   auto servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
   auto servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
   auto servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
   auto servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
-  auto waitBetweenPaths = updateSleepInMs * 20;
-  auto waitBetweenCycles = updateSleepInMs * 30;
+  auto waitBetweenPaths = 20;
+  auto waitBetweenCycles = 30;
 
   size_t stride = 1u;
 
@@ -191,11 +192,13 @@ main(int argc, char* argv[])
       } else if (currentArg == "--servoYawMaxValInNs") {
         servoYawMaxNsDutyCycle = atoi(argv[++i]);
       } else if (currentArg == "--waitBetweenPaths") {
-        waitBetweenPaths = atoi(argv[++i]) * updateSleepInMs;
+        waitBetweenPaths = atoi(argv[++i]);
       } else if (currentArg == "--waitBetweenCycles") {
-        waitBetweenCycles = atoi(argv[++i]) * updateSleepInMs;
+        waitBetweenCycles = atoi(argv[++i]);
       } else if (currentArg == "--stride") {
         stride = atoi(argv[++i]);
+      } else if (currentArg == "--updateSleepInMs") {
+        updateSleepInMs = atoi(argv[++i]);
       } else {
         printHelp();
         return -1;
@@ -204,6 +207,8 @@ main(int argc, char* argv[])
   }
   std::signal(SIGINT, signalHandler);
 
+  auto waitBetweenPathsInMs = waitBetweenPaths * updateSleepInMs;
+  auto waitBetweenCyclesInMs = waitBetweenCycles * updateSleepInMs;
   LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
                           SERVO_PITCH_PWM_NR,
@@ -246,10 +251,11 @@ main(int argc, char* argv[])
           break;
         }
         std::this_thread::sleep_for(
-          std::chrono::milliseconds(waitBetweenPaths));
+          std::chrono::milliseconds(waitBetweenPathsInMs));
       }
       laserPointer.setValue(false);
-      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycles));
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(waitBetweenCyclesInMs));
     }
   }
   if (enableLaser) {
