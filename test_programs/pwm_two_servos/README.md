@@ -39,3 +39,9 @@ q 2 --servoPitchIP 0.0 --servoYawIP 0.25 --servoYawMaxValInNs 850000 --servoYawM
 inValInNs 650000 --servoPitchMaxValInNs 1600000 --servoPitchMinValInNs 1400000
   --enableLaser 4 --spiral 20
 
+### Hello world
+--servoYawMaxValInNs 850000 --servoYawMinValInNs 450000 --ser
+voPitchMaxValInNs 1700000 --servoPitchMinValInNs 1500000   --enableLaser 34 --wa
+itBetweenPaths 4 --stride 2
+
+![Hello world SVG](doc/long_exposure_hello_world.png)
