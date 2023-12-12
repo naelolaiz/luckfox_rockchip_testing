@@ -1,11 +1,112 @@
 #include "GPIO.h"
 #include "PWM.h"
 
+#include "svg/nael.h"
+
 #include <cmath>
 #include <csignal>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <tuple>
+#include <vector>
+
+// class GraphChars
+//{
+// public:
+//   GraphChars()
+//   {
+//     constexpr float totalWidth = 2.f;
+//     const float charWidth = totalWidth / mCharsCount;
+//     const float halfCharWidth = charWidth / 2.f;
+//     float currentX = -1.f;
+//     float currentY = 0.f;
+//     size_t charNr = 0;
+//     for (auto v : mCharsMovements) {
+//       size_t counter = 0;
+//       for (auto t : v) {
+//         const auto steps = std::get<0>(t);
+//         const auto scaledX = std::get<1>(t) / mCharsCount;
+//         const auto finalX = scaledX + halfCharWidth - 1.f;
+//         const auto finalY = std::get<2>(t);
+//         const auto ledValue = std::get<3>(t);
+//         const auto stepSizeX = (finalX - currentX) / steps;
+//         const auto stepSizeY = (finalY - currentY) / steps;
+//         for (auto i = 0; i < steps; i++) {
+//           currentX += stepSizeX;
+//           currentY += stepSizeY;
+//           mInterpolatedValues.push_back(currentX, currentY, ledValue);
+//         }
+//         currentX = finalX;
+//         currentY = finalY;
+//         counter++;
+//         // set laser(std::get<3>(t));
+//       }
+//       //    mInterpolatedValues.resize(counter);
+//       charNr++;
+//     }
+//   }
+//   std::tuple<float, float> getNextXY()
+//   {
+//     std::tuple<float, float> toReturn;
+//     size_t counter = 0; // TODO: optimize
+//     for (auto v : mCharsMovements) {
+//       for (auto t : v) {
+//         if (counter)
+//           counter++;
+//       }
+//     }
+//     return toReturn;
+//   }
+
+// private:
+//   enum class CurrentStatus
+//   {
+//     WAITING_AND_INTERPOLATING,
+//     SET_LAST_VALUE_AND_READ_NEXT
+//   };
+//   const std::vector<
+//     std::vector<std::tuple<size_t /*cycles from current to this position*/,
+//                            float /*x after cycles: -1.f/1.f*/,
+//                            float /*y after cycles*/,
+//                            bool /*state after cycles*/
+//                            >>>
+//     mCharsMovements{ /*H*/
+//                      { { 1u, -1.f, 1.f, true },
+//                        { 10u, -1.f, -1.f, true },
+//                        { 5u, -1.f, 0.f, true },
+//                        { 6u, 1.f, 0.f, true },
+//                        { 5u, 1.f, 1.f, true },
+//                        { 10u, 1.f, -1.f, false } },
+//                      /*E*/
+//                      { { 1u, 1.f, 1.f, true },
+//                        { 5u, -1.f, 1.f, true },
+//                        { 5u, -1.f, 0.f, true },
+//                        { 4u, 0.75f, 0.f, true },
+//                        { 5u, -1.f, 0.f, true },
+//                        { 5u, -1.f, -1.f, true },
+//                        { 5u, 1.f, -1.f, false } },
+//                      /*L*/
+//                      { { 1u, -1.f, 1.f, true },
+//                        { 10u, -1.f, -1.f, true },
+//                        { 5u, 1.f, -1.f, false } },
+//                      /*L*/
+//                      { { 1u, -1.f, 1.f, true },
+//                        { 10u, -1.f, -1.f, true },
+//                        { 5u, 1.f, -1.f, false } },
+//                      /*O*/
+//                      { { 1u, -1.f, 1.f, true },
+//                        { 10u, -1.f, -1.f, true },
+//                        { 10u, 1.f, -1.f, true },
+//                        { 10u, 1.f, 1.f, true },
+//                        { 10u, -1.f, 1.f, false } }
+//     };
+//   const size_t mCharsCount = mCharsMovements.size();
+//   size_t mCurrrentPosition{};
+//   CurrentStatus mCurrentStatus{ CurrentStatus::SET_LAST_VALUE_AND_READ_NEXT
+//   }; std::vector<std::tuple<float, float, bool /*laser state at end*/>>
+//     mInterpolatedValues;
+// };
 
 volatile sig_atomic_t signalReceived = 0;
 void
@@ -139,7 +240,8 @@ main(int argc, char* argv[])
     std::cout
       << " Usage: " << argv[0]
       << " [--help] [--updateStep 0.05] "
-         "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
+         "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] "
+         "[--servoPitchMinValInNs "
          "0.02*1e9/50=400000] [--servoPitchMaxValInNs 0.12*1e9/50=2400000] "
          "[--servoYawFreq "
          "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 400000] "
@@ -209,9 +311,6 @@ main(int argc, char* argv[])
   }
   std::signal(SIGINT, signalHandler);
 
-  const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
-  const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
-
   LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
                           SERVO_PITCH_PWM_NR,
@@ -229,30 +328,26 @@ main(int argc, char* argv[])
     laserPointer.setValue(true);
   }
 
-  size_t currentCycle = 0;
-  double currentGain = cyclesForSpiral == 0 ? 1. : 0.;
   while (!signalReceived) {
-
-    if (cyclesForSpiral != 0) {
-      currentGain = static_cast<double>(currentCycle) / cyclesForSpiral;
-    }
-    for (float f = 0.f; f < twoPi; f += updateStep) {
-      if (signalReceived) {
-        break;
+    for (auto path : nael) {
+      if (enableLaser) {
+        laserPointer.disable();
       }
-      servoPitch.setValue(currentGain *
-                          sin(servoPitchInitialPhase + f * servoPitchFreq));
-      servoYaw.setValue(currentGain *
-                        sin(servoYawInitialPhase + f * servoYawFreq));
-      std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
+      for (size_t i = 0; i < 50; i++) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
+      }
+      if (enableLaser) {
+        laserPointer.enable();
+      }
+      for (auto x_y : path) {
+        servoYaw.setValue(std::get<0>(x_y));
+        servoPitch.setValue(std::get<1>(x_y));
+      }
     }
-    if (cyclesForSpiral != 0 && ++currentCycle == cyclesForSpiral) {
-      currentCycle = 0;
-    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
   }
   if (enableLaser) {
     laserPointer.disable();
   }
-
   return 0;
 }
