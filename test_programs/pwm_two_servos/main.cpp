@@ -2,6 +2,7 @@
 #include "PWM.h"
 
 #include "svg/hello_world.h"
+#include "svg/standup.h"
 
 #include <cmath>
 #include <csignal>
@@ -221,7 +222,7 @@ main(int argc, char* argv[])
   }
 
   while (!signalReceived) {
-    for (auto svg : { hello_world }) {
+    for (auto svg : { standup }) {
       for (auto path : svg) {
         size_t counter = 0;
         if (enableLaser) {
