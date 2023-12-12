@@ -311,6 +311,9 @@ main(int argc, char* argv[])
   }
   std::signal(SIGINT, signalHandler);
 
+  const auto waitBetweenChars = updateSleepInMs * 30;
+  const auto waitBetweenCycle = updateSleepInMs * 100;
+
   LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
                           SERVO_PITCH_PWM_NR,
@@ -333,18 +336,17 @@ main(int argc, char* argv[])
       if (enableLaser) {
         laserPointer.disable();
       }
-      for (size_t i = 0; i < 50; i++) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
-      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenChars));
       if (enableLaser) {
         laserPointer.enable();
       }
       for (auto x_y : path) {
         servoYaw.setValue(std::get<0>(x_y));
         servoPitch.setValue(std::get<1>(x_y));
+        std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
       }
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
+    std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycle));
   }
   if (enableLaser) {
     laserPointer.disable();
