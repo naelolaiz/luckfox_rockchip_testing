@@ -59,7 +59,8 @@ public:
   void setValue(float value) // -1/+1 (0=center)
   {
     if (value < -1.f || value > 1.f) {
-      throw std::runtime_error("invalid value");
+      throw std::runtime_error(std::string("invalid value ") +
+                               std::to_string(value));
     }
     mCurrentValue = value;
     auto dutyCycleInNs = mMinDutyCycleInNs + (1 + value) * mDutyCycleMidRange;
