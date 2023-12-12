@@ -68,7 +68,7 @@ def write_cpp_files(header_file, cpp_file, variable_name, all_paths):
 def main():
     parser = argparse.ArgumentParser(description='Process an SVG file to sample and normalize points from paths.')
     parser.add_argument('svg_file', type=str, help='Path to the SVG file')
-    parser.add_argument('--num_points', type=int, default=100, help='Number of equidistant points to sample from each path')
+    parser.add_argument('--num_points', type=int, default=30, help='Number of equidistant points to sample from each path')
     parser.add_argument('--output_base', type=str, help='Base name for the output files (without extension)')
     args = parser.parse_args()
 
