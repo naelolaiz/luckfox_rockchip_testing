@@ -1,7 +1,14 @@
 import argparse
 import os
+import re
 import svgpathtools
 from svgpathtools import svg2paths
+
+def sanitize_variable_name(name):
+    """ Sanitize the string to be a valid C++ variable name. """
+    # Remove invalid characters
+    name = re.sub(r'\W|^(?=\d)', '_', name)
+    return name
 
 def normalize_point(point, min_x, max_x, min_y, max_y):
     """ Normalize a point to the range [-1, 1]. """
@@ -32,7 +39,7 @@ def calculate_bounds(paths):
 
     return min_x, max_x, min_y, max_y
 
-def write_cpp_files(header_file, cpp_file, all_paths):
+def write_cpp_files(header_file, cpp_file, variable_name, all_paths):
     """ Write the vector definition and initialization to .h and .cpp files. """
     # Write to the header file
     with open(header_file, 'w') as file:
@@ -40,13 +47,13 @@ def write_cpp_files(header_file, cpp_file, all_paths):
         file.write(f"#ifndef {guard}\n")
         file.write(f"#define {guard}\n\n")
         file.write("#include <vector>\n\n")
-        file.write("extern std::vector<std::vector<std::pair<double, double>>> my_paths;\n")
+        file.write(f"extern std::vector<std::vector<std::pair<double, double>>> {variable_name};\n")
         file.write(f"#endif // {guard}\n")
 
     # Write to the cpp file
     with open(cpp_file, 'w') as file:
         file.write(f'#include "{header_file}"\n\n')
-        file.write("std::vector<std::vector<std::pair<double, double>>> my_paths = {\n")
+        file.write(f"std::vector<std::vector<std::pair<double, double>>> {variable_name} = {{\n")
         for path in all_paths:
             file.write("    {  // Single Path\n")
             for point in path:
@@ -61,10 +68,11 @@ def main():
     parser.add_argument('--output_base', type=str, help='Base name for the output files (without extension)')
     args = parser.parse_args()
 
+    base_name = os.path.splitext(args.svg_file)[0]
     if not args.output_base:
-        base_name = os.path.splitext(args.svg_file)[0]
         args.output_base = base_name
 
+    variable_name = sanitize_variable_name(os.path.basename(base_name))
     header_file = f"{args.output_base}.h"
     cpp_file = f"{args.output_base}.cpp"
 
@@ -72,7 +80,7 @@ def main():
     min_x, max_x, min_y, max_y = calculate_bounds(paths)
     all_points = [sample_path(path, args.num_points, min_x, max_x, min_y, max_y) for path in paths]
 
-    write_cpp_files(header_file, cpp_file, all_points)
+    write_cpp_files(header_file, cpp_file, variable_name, all_points)
     print(f"Output written to {header_file} and {cpp_file}")
 
 if __name__ == "__main__":

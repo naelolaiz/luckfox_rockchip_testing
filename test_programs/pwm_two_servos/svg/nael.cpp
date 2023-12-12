@@ -1,6 +1,6 @@
 #include "nael.h"
 
-std::vector<std::vector<std::pair<double, double>>> my_paths = {
+std::vector<std::vector<std::pair<double, double>>> nael = {
     {  // Single Path
         { -1.0, 0.8026905182815454 },
         { -0.9773886393711256, 0.772828620791312 },

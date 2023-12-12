@@ -1,6 +1,7 @@
 #include "GPIO.h"
 #include "PWM.h"
 
+#include "svg/hello_world.h"
 #include "svg/nael.h"
 
 #include <cmath>
@@ -332,21 +333,25 @@ main(int argc, char* argv[])
   }
 
   while (!signalReceived) {
-    for (auto path : my_paths) {
-      if (enableLaser) {
-        laserPointer.disable();
+    for (auto svg : { hello_world, nael }) {
+      for (auto path : svg) {
+        if (enableLaser) {
+          laserPointer.disable();
+        }
+        std::this_thread::sleep_for(
+          std::chrono::milliseconds(waitBetweenChars));
+        if (enableLaser) {
+          laserPointer.enable();
+        }
+        for (std::pair<double, double> x_y : path) {
+          servoYaw.setValue(std::get<0>(x_y));
+          servoPitch.setValue(std::get<1>(x_y));
+          std::this_thread::sleep_for(
+            std::chrono::milliseconds(updateSleepInMs));
+        }
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenChars));
-      if (enableLaser) {
-        laserPointer.enable();
-      }
-      for (std::pair<double, double> x_y : path) {
-        servoYaw.setValue(std::get<0>(x_y));
-        servoPitch.setValue(std::get<1>(x_y));
-        std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
-      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycle));
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycle));
   }
   if (enableLaser) {
     laserPointer.disable();
