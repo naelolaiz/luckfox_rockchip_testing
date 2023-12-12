@@ -6,7 +6,6 @@ from svgpathtools import svg2paths
 
 def sanitize_variable_name(name):
     """ Sanitize the string to be a valid C++ variable name. """
-    # Remove invalid characters
     name = re.sub(r'\W|^(?=\d)', '_', name)
     return name
 
@@ -20,8 +19,10 @@ def normalize_point(point, min_x, max_x, min_y, max_y):
     y = clamp(-1 + 2 * (point[1] - min_y) / (max_y - min_y), -1, 1)
     return (x, y)
 
-def sample_path(path, num_points, min_x, max_x, min_y, max_y):
-    """ Sample num_points equidistant points from the path and normalize them. """
+def sample_path(path, distance_between_points, min_x, max_x, min_y, max_y):
+    """ Sample points from the path based on the desired distance between points and normalize them. """
+    length = path.length()
+    num_points = max(2, int(length / distance_between_points))
     return [normalize_point((path.point(t / (num_points - 1)).real, path.point(t / (num_points - 1)).imag), min_x, max_x, min_y, max_y) for t in range(num_points)]
 
 def parse_svg(svg_file):
@@ -45,7 +46,6 @@ def calculate_bounds(paths):
 
 def write_cpp_files(header_file, cpp_file, variable_name, all_paths):
     """ Write the vector definition and initialization to .h and .cpp files. """
-    # Write to the header file
     with open(header_file, 'w') as file:
         guard = os.path.basename(header_file).replace('.', '_').upper()
         file.write(f"#ifndef {guard}\n")
@@ -54,7 +54,6 @@ def write_cpp_files(header_file, cpp_file, variable_name, all_paths):
         file.write(f"extern std::vector<std::vector<std::pair<double, double>>> {variable_name};\n")
         file.write(f"#endif // {guard}\n")
 
-    # Write to the cpp file
     with open(cpp_file, 'w') as file:
         file.write(f'#include "{header_file}"\n\n')
         file.write(f"std::vector<std::vector<std::pair<double, double>>> {variable_name} = {{\n")
@@ -66,9 +65,9 @@ def write_cpp_files(header_file, cpp_file, variable_name, all_paths):
         file.write("};\n")
 
 def main():
-    parser = argparse.ArgumentParser(description='Process an SVG file to sample and normalize points from paths.')
+    parser = argparse.ArgumentParser(description='Process an SVG file to sample points from paths with consistent spacing.')
     parser.add_argument('svg_file', type=str, help='Path to the SVG file')
-    parser.add_argument('--num_points', type=int, default=30, help='Number of equidistant points to sample from each path')
+    parser.add_argument('--distance', type=float, default=1.0, help='Approximate distance between sampled points')
     parser.add_argument('--output_base', type=str, help='Base name for the output files (without extension)')
     args = parser.parse_args()
 
@@ -82,7 +81,7 @@ def main():
 
     paths = parse_svg(args.svg_file)
     min_x, max_x, min_y, max_y = calculate_bounds(paths)
-    all_points = [sample_path(path, args.num_points, min_x, max_x, min_y, max_y) for path in paths]
+    all_points = [sample_path(path, args.distance, min_x, max_x, min_y, max_y) for path in paths]
 
     write_cpp_files(header_file, cpp_file, variable_name, all_points)
     print(f"Output written to {header_file} and {cpp_file}")
