@@ -142,17 +142,12 @@ int
 main(int argc, char* argv[])
 {
   auto printHelp = [&argv]() {
-    std::cout
-      << " Usage: " << argv[0]
-      << " [--help] [--updateStep 0.05] "
-         "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] "
-         "[--servoPitchMinValInNs "
-         "0.02*1e9/50=400000] [--servoPitchMaxValInNs 0.12*1e9/50=2400000] "
-         "[--servoYawFreq "
-         "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 400000] "
-         "[--servoYawMaxValInNs 2400000] [--enableLaser 4] [--spiral "
-         "cycles_to_reach_max_val]"
-      << std::endl;
+    std::cout << " Usage: " << argv[0]
+              << " [--help] [--servoPitchMinValInNs "
+                 "0.02*1e9/50=400000] [--servoPitchMaxValInNs "
+                 "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
+                 "[--servoYawMaxValInNs 2400000] [--enableLaser 34]"
+              << std::endl;
   };
 
   constexpr int DEFAULT_GPIO_NR_FOR_LASER = 4;
@@ -160,13 +155,15 @@ main(int argc, char* argv[])
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
   constexpr size_t SERVO_YAW_PWM_NR = 0;
-
-  size_t servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
-  size_t servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
-  size_t servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
-  size_t servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
-
   constexpr size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
+
+  auto servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  auto servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  auto servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  auto servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  auto waitBetweenPaths = updateSleepInMs * 20;
+  auto waitBetweenCycles = updateSleepInMs * 30;
+
   bool enableLaser = false;
   int gpioNrForLaser = DEFAULT_GPIO_NR_FOR_LASER;
 
@@ -190,6 +187,10 @@ main(int argc, char* argv[])
         servoYawMinNsDutyCycle = atoi(argv[++i]);
       } else if (currentArg == "--servoYawMaxValInNs") {
         servoYawMaxNsDutyCycle = atoi(argv[++i]);
+      } else if (currentArg == "--waitBetweenPaths") {
+        waitBetweenPaths = atoi(argv[++i]) * updateSleepInMs;
+      } else if (currentArg == "--waitBetweenCycles") {
+        waitBetweenCycles = atoi(argv[++i]) * updateSleepInMs;
       } else {
         printHelp();
         return -1;
@@ -197,9 +198,6 @@ main(int argc, char* argv[])
     }
   }
   std::signal(SIGINT, signalHandler);
-
-  const auto waitBetweenChars = updateSleepInMs * 30;
-  const auto waitBetweenCycle = updateSleepInMs * 100;
 
   LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
@@ -225,7 +223,7 @@ main(int argc, char* argv[])
           laserPointer.setValue(false);
         }
         std::this_thread::sleep_for(
-          std::chrono::milliseconds(waitBetweenChars));
+          std::chrono::milliseconds(waitBetweenPaths));
         bool laserOn = false;
         for (std::pair<double, double> x_y : path) {
           servoYaw.setValue(-1.f * std::get<0>(x_y));
@@ -247,7 +245,7 @@ main(int argc, char* argv[])
         }
       }
       laserPointer.setValue(false);
-      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycle));
+      std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycles));
     }
   }
   if (enableLaser) {
