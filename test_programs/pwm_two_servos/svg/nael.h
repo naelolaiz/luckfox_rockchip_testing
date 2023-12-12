@@ -3,10 +3,6 @@
 
 #include <vector>
 
-struct MY_STRUCT
-{
-  std::vector<std::vector<std::pair<double, double>>> paths;
-};
-extern MY_STRUCT nael;
+extern std::vector<std::vector<std::pair<double, double>>> nael;
 
 #endif // NAEL_H

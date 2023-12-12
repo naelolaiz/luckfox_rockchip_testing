@@ -340,7 +340,7 @@ main(int argc, char* argv[])
       if (enableLaser) {
         laserPointer.enable();
       }
-      for (auto x_y : path) {
+      for (std::pair<double, double> x_y : path) {
         servoYaw.setValue(std::get<0>(x_y));
         servoPitch.setValue(std::get<1>(x_y));
         std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
