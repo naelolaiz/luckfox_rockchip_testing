@@ -336,20 +336,23 @@ main(int argc, char* argv[])
     for (auto svg : { hello_world, nael }) {
       for (auto path : svg) {
         if (enableLaser) {
-          laserPointer.disable();
+          laserPointer.setValue(false);
         }
         std::this_thread::sleep_for(
           std::chrono::milliseconds(waitBetweenChars));
-        if (enableLaser) {
-          laserPointer.enable();
-        }
+        bool laserOn = false;
         for (std::pair<double, double> x_y : path) {
           servoYaw.setValue(std::get<0>(x_y));
           servoPitch.setValue(std::get<1>(x_y));
+          if (enableLaser && !laserOn) {
+            laserPointer.setValue(true);
+            laserOn = true;
+          }
           std::this_thread::sleep_for(
             std::chrono::milliseconds(updateSleepInMs));
         }
       }
+      laserPointer.setValue(false);
       std::this_thread::sleep_for(std::chrono::milliseconds(waitBetweenCycle));
     }
   }
