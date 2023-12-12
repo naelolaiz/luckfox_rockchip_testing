@@ -228,14 +228,22 @@ main(int argc, char* argv[])
           std::chrono::milliseconds(waitBetweenChars));
         bool laserOn = false;
         for (std::pair<double, double> x_y : path) {
-          servoYaw.setValue(std::get<0>(x_y));
-          servoPitch.setValue(std::get<1>(x_y));
+          servoYaw.setValue(-1.f * std::get<0>(x_y));
+          servoPitch.setValue(-1.f * std::get<1>(x_y));
           if (enableLaser && !laserOn) {
             laserPointer.setValue(true);
             laserOn = true;
           }
+
+          if (signalReceived) {
+            break;
+          }
           std::this_thread::sleep_for(
             std::chrono::milliseconds(updateSleepInMs));
+        }
+
+        if (signalReceived) {
+          break;
         }
       }
       laserPointer.setValue(false);
