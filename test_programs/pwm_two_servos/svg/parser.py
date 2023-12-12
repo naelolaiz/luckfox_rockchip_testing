@@ -33,29 +33,25 @@ def calculate_bounds(paths):
     return min_x, max_x, min_y, max_y
 
 def write_cpp_files(header_file, cpp_file, all_paths):
-    """ Write the structure and data to .h and .cpp files. """
+    """ Write the vector definition and initialization to .h and .cpp files. """
     # Write to the header file
     with open(header_file, 'w') as file:
         guard = os.path.basename(header_file).replace('.', '_').upper()
         file.write(f"#ifndef {guard}\n")
         file.write(f"#define {guard}\n\n")
         file.write("#include <vector>\n\n")
-        file.write("struct MY_STRUCT {\n")
-        file.write("    std::vector<std::vector<std::pair<double, double>>> paths;\n")
-        file.write("};\n\n")
+        file.write("extern std::vector<std::vector<std::pair<double, double>>> my_paths;\n")
         file.write(f"#endif // {guard}\n")
 
     # Write to the cpp file
     with open(cpp_file, 'w') as file:
         file.write(f'#include "{header_file}"\n\n')
-        file.write("MY_STRUCT my_data = {\n")
-        file.write("    {  // Paths\n")
+        file.write("std::vector<std::vector<std::pair<double, double>>> my_paths = {\n")
         for path in all_paths:
-            file.write("        {  // Single Path\n")
+            file.write("    {  // Single Path\n")
             for point in path:
-                file.write(f"            {{ {point[0]}, {point[1]} }},\n")
-            file.write("        },\n")
-        file.write("    }\n")
+                file.write(f"        {{ {point[0]}, {point[1]} }},\n")
+            file.write("    },\n")
         file.write("};\n")
 
 def main():

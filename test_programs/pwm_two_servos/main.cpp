@@ -332,7 +332,7 @@ main(int argc, char* argv[])
   }
 
   while (!signalReceived) {
-    for (auto path : nael) {
+    for (auto path : my_paths) {
       if (enableLaser) {
         laserPointer.disable();
       }
