@@ -229,22 +229,21 @@ main(int argc, char* argv[])
           laserPointer.setValue(true);
         }
         for (std::pair<double, double> x_y : path) {
-          if (counter++ % stride == 0) {
-            servoYaw.setValue(-1.f * std::get<0>(x_y));
-            servoPitch.setValue(-1.f * std::get<1>(x_y));
-          }
-
           if (signalReceived) {
             break;
           }
-          std::this_thread::sleep_for(
-            std::chrono::milliseconds(updateSleepInMs));
-        }
-        if (signalReceived) {
-          break;
+          if (counter++ % stride == 0) {
+            servoYaw.setValue(-1.f * std::get<0>(x_y));
+            servoPitch.setValue(-1.f * std::get<1>(x_y));
+            std::this_thread::sleep_for(
+              std::chrono::milliseconds(updateSleepInMs));
+          }
         }
         if (enableLaser) {
           laserPointer.setValue(false);
+        }
+        if (signalReceived) {
+          break;
         }
         std::this_thread::sleep_for(
           std::chrono::milliseconds(waitBetweenPaths));
