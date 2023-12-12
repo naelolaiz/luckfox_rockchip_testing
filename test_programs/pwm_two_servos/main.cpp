@@ -146,7 +146,8 @@ main(int argc, char* argv[])
               << " [--help] [--servoPitchMinValInNs "
                  "0.02*1e9/50=400000] [--servoPitchMaxValInNs "
                  "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
-                 "[--servoYawMaxValInNs 2400000] [--enableLaser 34]"
+                 "[--servoYawMaxValInNs 2400000] [--waitBetweenCycles 20] "
+                 "[--waitBetweenPaths 30] [--enableLaser 34]"
               << std::endl;
   };
 
