@@ -10,10 +10,14 @@ def sanitize_variable_name(name):
     name = re.sub(r'\W|^(?=\d)', '_', name)
     return name
 
+def clamp(value, min_value, max_value):
+    """ Clamp the value within the min_value and max_value range. """
+    return max(min_value, min(max_value, value))
+
 def normalize_point(point, min_x, max_x, min_y, max_y):
-    """ Normalize a point to the range [-1, 1]. """
-    x = -1 + 2 * (point[0] - min_x) / (max_x - min_x)
-    y = -1 + 2 * (point[1] - min_y) / (max_y - min_y)
+    """ Normalize a point to the range [-1, 1] and clamp the values. """
+    x = clamp(-1 + 2 * (point[0] - min_x) / (max_x - min_x), -1, 1)
+    y = clamp(-1 + 2 * (point[1] - min_y) / (max_y - min_y), -1, 1)
     return (x, y)
 
 def sample_path(path, num_points, min_x, max_x, min_y, max_y):
