@@ -147,7 +147,7 @@ main(int argc, char* argv[])
                  "0.02*1e9/50=400000] [--servoPitchMaxValInNs "
                  "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
                  "[--servoYawMaxValInNs 2400000] [--waitBetweenCycles 20] "
-                 "[--waitBetweenPaths 30] [--enableLaser 34]"
+                 "[--waitBetweenPaths 30] [--enableLaser 34] [--stride 1]"
               << std::endl;
   };
 
@@ -164,6 +164,8 @@ main(int argc, char* argv[])
   auto servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
   auto waitBetweenPaths = updateSleepInMs * 20;
   auto waitBetweenCycles = updateSleepInMs * 30;
+
+  size_t stride = 1u;
 
   bool enableLaser = false;
   int gpioNrForLaser = DEFAULT_GPIO_NR_FOR_LASER;
@@ -192,6 +194,8 @@ main(int argc, char* argv[])
         waitBetweenPaths = atoi(argv[++i]) * updateSleepInMs;
       } else if (currentArg == "--waitBetweenCycles") {
         waitBetweenCycles = atoi(argv[++i]) * updateSleepInMs;
+      } else if (currentArg == "--stride") {
+        stride = atoi(argv[++i]);
       } else {
         printHelp();
         return -1;
@@ -226,12 +230,15 @@ main(int argc, char* argv[])
         std::this_thread::sleep_for(
           std::chrono::milliseconds(waitBetweenPaths));
         bool laserOn = false;
+        size_t counter = 0;
         for (std::pair<double, double> x_y : path) {
-          servoYaw.setValue(-1.f * std::get<0>(x_y));
-          servoPitch.setValue(-1.f * std::get<1>(x_y));
-          if (enableLaser && !laserOn) {
-            laserPointer.setValue(true);
-            laserOn = true;
+          if (counter++ % stride == 0) {
+            servoYaw.setValue(-1.f * std::get<0>(x_y));
+            servoPitch.setValue(-1.f * std::get<1>(x_y));
+            if (enableLaser && !laserOn) {
+              laserPointer.setValue(true);
+              laserOn = true;
+            }
           }
 
           if (signalReceived) {
