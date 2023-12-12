@@ -6,7 +6,7 @@ add_executable(${target_name} main.cpp
                               svg/hello_world.h
                               svg/test.h)
 target_link_libraries(${target_name} PRIVATE peripherals_interface)
-target_include_directories(${target_name} PRIVATE .)
+target_include_directories(${target_name} PRIVATE . json/include)
 
 install(TARGETS ${target_name} DESTINATION bin)
 install(FILES S92pwm_two_servos DESTINATION etc/init.d)

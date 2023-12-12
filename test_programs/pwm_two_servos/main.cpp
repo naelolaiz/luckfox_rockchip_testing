@@ -12,47 +12,36 @@
 #include <tuple>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 
 std::vector<std::vector<std::pair<float, float>>>
-ParseJson(const std::string& jsonStr)
+ParseJson(const std::string& filename)
 {
+  // Read the JSON file
+  std::ifstream file(filename);
+  nlohmann::json j;
+  file >> j;
+
+  // Create the vector to hold the path data
   std::vector<std::vector<std::pair<float, float>>> paths;
-  std::istringstream jsonStream(jsonStr);
-  char ch;
-  float x, y;
-  while (jsonStream >> ch) {
-    if (ch == '[') {
-      jsonStream >> ch;
-      if (ch == '[') { // Start of a new path
-        paths.emplace_back();
-        while (jsonStream >> ch && ch != ']') { // Read each point
-          if (ch == '[') {
-            jsonStream >> x >> ch >> y >> ch;
-            paths.back().emplace_back(x, y);
-          }
-        }
-      }
+
+  // Populate the vector from the JSON data
+  for (const auto& path : j) {
+    std::vector<std::pair<float, float>> pathVec;
+    for (const auto& point : path) {
+      float x = point[0];
+      float y = point[1];
+      pathVec.emplace_back(x, y);
     }
+    paths.push_back(pathVec);
   }
   return paths;
 }
-
-// int main() {
-
-//    // Example usage
-//    for (const auto& path : paths) {
-//        for (const auto& point : path) {
-//            std::cout << "Point: (" << point.first << ", " << point.second <<
-//            ")\n";
-//        }
-//    }
-
-//    return 0;
-//}
 
 volatile sig_atomic_t signalReceived = 0;
 void
@@ -251,14 +240,7 @@ main(int argc, char* argv[])
     }
   }
 
-  auto pathVector =
-    (jsonFilename == "" ? test : [](const std::string& filename) {
-      std::ifstream file(filename);
-      std::stringstream buffer;
-      buffer << file.rdbuf();
-      std::string jsonStr = buffer.str();
-      return ParseJson(jsonStr);
-    }(jsonFilename));
+  auto pathVector = jsonFilename == "" ? test : ParseJson(jsonFilename);
 
   std::signal(SIGINT, signalHandler);
 
