@@ -12,6 +12,62 @@
 #include <tuple>
 #include <vector>
 
+#include <fstream>
+#include <iostream>
+#include <regex>
+#include <sstream>
+#include <string>
+
+std::vector<std::vector<std::pair<float, float>>>
+ParseJson(const std::string& jsonStr)
+{
+  std::vector<std::vector<std::pair<float, float>>> paths;
+  std::regex pathRegex(R"(\[\[([^\]]+)\]\])"); // Regex to match each path
+  std::regex pointRegex(R"(\[([^\]]+)\])");    // Regex to match each point
+  std::regex coordRegex(
+    R"((-?\d+\.\d+),\s*(-?\d+\.\d+))"); // Regex to match coordinates
+
+  std::sregex_iterator pathIter(jsonStr.begin(), jsonStr.end(), pathRegex);
+  std::sregex_iterator end;
+
+  while (pathIter != end) {
+    std::string pathStr = (*pathIter)[1].str(); // Extract path string
+    std::vector<std::pair<float, float>> path;
+
+    std::sregex_iterator pointIter(pathStr.begin(), pathStr.end(), pointRegex);
+    while (pointIter != end) {
+      std::string pointStr = (*pointIter)[1].str(); // Extract point string
+
+      std::smatch coordMatch;
+      if (std::regex_search(pointStr, coordMatch, coordRegex)) {
+        float x = std::stof(coordMatch[1].str());
+        float y = std::stof(coordMatch[2].str());
+        path.emplace_back(x, y);
+      }
+
+      ++pointIter;
+    }
+
+    paths.push_back(path);
+    ++pathIter;
+  }
+
+  return paths;
+}
+
+// int main() {
+
+//    // Example usage
+//    for (const auto& path : paths) {
+//        for (const auto& point : path) {
+//            std::cout << "Point: (" << point.first << ", " << point.second <<
+//            ")\n";
+//        }
+//    }
+
+//    return 0;
+//}
+
 volatile sig_atomic_t signalReceived = 0;
 void
 signalHandler(int signal)
@@ -148,7 +204,7 @@ main(int argc, char* argv[])
                  "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
                  "[--servoYawMaxValInNs 2400000] [--waitBetweenCycles 20] "
                  "[--waitBetweenPaths 30] [--enableLaser 34] [--stride 1] "
-                 "[--updateSleepInMs 20]"
+                 "[--updateSleepInMs 20] [--file filename.json]"
               << std::endl;
   };
 
@@ -165,6 +221,7 @@ main(int argc, char* argv[])
   auto servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
   auto waitBetweenPaths = 20;
   auto waitBetweenCycles = 30;
+  std::string jsonFilename;
 
   size_t stride = 1u;
 
@@ -199,12 +256,24 @@ main(int argc, char* argv[])
         stride = atoi(argv[++i]);
       } else if (currentArg == "--updateSleepInMs") {
         updateSleepInMs = atoi(argv[++i]);
+      } else if (currentArg == "--file") {
+        jsonFilename = argv[++i];
       } else {
         printHelp();
         return -1;
       }
     }
   }
+
+  auto pathVector =
+    (jsonFilename == "" ? test : [](const std::string& filename) {
+      std::ifstream file(filename);
+      std::stringstream buffer;
+      buffer << file.rdbuf();
+      std::string jsonStr = buffer.str();
+      return ParseJson(jsonStr);
+    }(jsonFilename));
+
   std::signal(SIGINT, signalHandler);
 
   auto waitBetweenPathsInMs = waitBetweenPaths * updateSleepInMs;
@@ -227,7 +296,7 @@ main(int argc, char* argv[])
   }
 
   while (!signalReceived) {
-    for (auto svg : { test }) {
+    for (auto svg : { pathVector }) {
       for (auto path : svg) {
         size_t counter = 0;
         if (enableLaser) {

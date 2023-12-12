@@ -3,5 +3,5 @@
 
 #include <vector>
 
-extern std::vector<std::vector<std::pair<double, double>>> test;
+extern std::vector<std::vector<std::pair<float, float>>> test;
 #endif // TEST_H
