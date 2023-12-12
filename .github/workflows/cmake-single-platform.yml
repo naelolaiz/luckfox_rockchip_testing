@@ -6,16 +6,17 @@ on:
   pull_request:
     branches: [ "*" ]
 
-env:
-  BUILD_TYPE: Release
-
 jobs:
   prepare_container_and_build:
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
     runs-on: ubuntu-latest
     container: luckfoxtech/luckfox_pico:1.0
     env:
       ARCH: "arm"
       CROSS_COMPILE: "/build_env/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin/"
+      BUILD_TYPE: ${{ matrix.build_type }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +31,7 @@ jobs:
       - name: Publish Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: test_programs
+          name: test_programs-${{ matrix.build_type }}
           path: |
             build/install/bin/*
             build/install/etc/init.d/*
