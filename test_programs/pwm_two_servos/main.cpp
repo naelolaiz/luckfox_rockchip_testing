@@ -14,7 +14,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <regex>
 #include <sstream>
 #include <string>
 
@@ -22,36 +21,23 @@ std::vector<std::vector<std::pair<float, float>>>
 ParseJson(const std::string& jsonStr)
 {
   std::vector<std::vector<std::pair<float, float>>> paths;
-  std::regex pathRegex(R"(\[\[([^\]]+)\]\])"); // Regex to match each path
-  std::regex pointRegex(R"(\[([^\]]+)\])");    // Regex to match each point
-  std::regex coordRegex(
-    R"((-?\d+\.\d+),\s*(-?\d+\.\d+))"); // Regex to match coordinates
-
-  std::sregex_iterator pathIter(jsonStr.begin(), jsonStr.end(), pathRegex);
-  std::sregex_iterator end;
-
-  while (pathIter != end) {
-    std::string pathStr = (*pathIter)[1].str(); // Extract path string
-    std::vector<std::pair<float, float>> path;
-
-    std::sregex_iterator pointIter(pathStr.begin(), pathStr.end(), pointRegex);
-    while (pointIter != end) {
-      std::string pointStr = (*pointIter)[1].str(); // Extract point string
-
-      std::smatch coordMatch;
-      if (std::regex_search(pointStr, coordMatch, coordRegex)) {
-        float x = std::stof(coordMatch[1].str());
-        float y = std::stof(coordMatch[2].str());
-        path.emplace_back(x, y);
+  std::istringstream jsonStream(jsonStr);
+  char ch;
+  float x, y;
+  while (jsonStream >> ch) {
+    if (ch == '[') {
+      jsonStream >> ch;
+      if (ch == '[') { // Start of a new path
+        paths.emplace_back();
+        while (jsonStream >> ch && ch != ']') { // Read each point
+          if (ch == '[') {
+            jsonStream >> x >> ch >> y >> ch;
+            paths.back().emplace_back(x, y);
+          }
+        }
       }
-
-      ++pointIter;
     }
-
-    paths.push_back(path);
-    ++pathIter;
   }
-
   return paths;
 }
 
