@@ -1,11 +1,47 @@
 #include "GPIO.h"
 #include "PWM.h"
 
+#include "svg/hello_world.h"
+#include "svg/test.h"
+
 #include <cmath>
 #include <csignal>
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <tuple>
+#include <vector>
+
+#include <nlohmann/json.hpp>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+std::vector<std::vector<std::pair<float, float>>>
+ParseJson(const std::string& filename)
+{
+  // Read the JSON file
+  std::ifstream file(filename);
+  nlohmann::json j;
+  file >> j;
+
+  // Create the vector to hold the path data
+  std::vector<std::vector<std::pair<float, float>>> paths;
+
+  // Populate the vector from the JSON data
+  for (const auto& path : j) {
+    std::vector<std::pair<float, float>> pathVec;
+    for (const auto& point : path) {
+      float x = point[0];
+      float y = point[1];
+      pathVec.emplace_back(x, y);
+    }
+    paths.push_back(pathVec);
+  }
+  return paths;
+}
 
 volatile sig_atomic_t signalReceived = 0;
 void
@@ -54,7 +90,8 @@ public:
   void setValue(float value) // -1/+1 (0=center)
   {
     if (value < -1.f || value > 1.f) {
-      throw std::runtime_error("invalid value");
+      throw std::runtime_error(std::string("invalid value ") +
+                               std::to_string(value));
     }
     mCurrentValue = value;
     auto dutyCycleInNs = mMinDutyCycleInNs + (1 + value) * mDutyCycleMidRange;
@@ -136,16 +173,14 @@ int
 main(int argc, char* argv[])
 {
   auto printHelp = [&argv]() {
-    std::cout
-      << " Usage: " << argv[0]
-      << " [--help] [--updateStep 0.05] "
-         "[--servoPitchFreq 1.0] [--servoPitchIP 0.0] [--servoPitchMinValInNs "
-         "0.02*1e9/50=400000] [--servoPitchMaxValInNs 0.12*1e9/50=2400000] "
-         "[--servoYawFreq "
-         "2.0] [--servoYawIP 0.25] [--servoYawMinValInNs 400000] "
-         "[--servoYawMaxValInNs 2400000] [--enableLaser 4] [--spiral "
-         "cycles_to_reach_max_val]"
-      << std::endl;
+    std::cout << " Usage: " << argv[0]
+              << " [--help] [--servoPitchMinValInNs "
+                 "0.02*1e9/50=400000] [--servoPitchMaxValInNs "
+                 "0.12*1e9/50=2400000] [--servoYawMinValInNs 400000] "
+                 "[--servoYawMaxValInNs 2400000] [--waitBetweenCycles 20] "
+                 "[--waitBetweenPaths 30] [--enableLaser 34] [--stride 1] "
+                 "[--updateSleepInMs 20] [--file filename.json]"
+              << std::endl;
   };
 
   constexpr int DEFAULT_GPIO_NR_FOR_LASER = 4;
@@ -153,19 +188,18 @@ main(int argc, char* argv[])
   constexpr size_t SERVO_PITCH_PWM_NR = 0;
   constexpr size_t SERVO_YAW_PWM_CHIP_NR = 11;
   constexpr size_t SERVO_YAW_PWM_NR = 0;
+  size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
 
-  size_t servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
-  size_t servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
-  size_t servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
-  size_t servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
-  size_t cyclesForSpiral = 0; // 0 = no changes
+  auto servoYawMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  auto servoYawMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  auto servoPitchMinNsDutyCycle = Servo::ABSOLUTE_MIN_DUTY_CYCLE_IN_NS;
+  auto servoPitchMaxNsDutyCycle = Servo::ABSOLUTE_MAX_DUTY_CYCLE_IN_NS;
+  auto waitBetweenPaths = 20;
+  auto waitBetweenCycles = 30;
+  std::string jsonFilename;
 
-  constexpr size_t updateSleepInMs = 20u; // 20 ms sleeps for ~50Hz updates
-  float updateStep = 0.05f;
-  float servoPitchFreq = 1.f;
-  float servoYawFreq = 2.f;
-  float servoPitchInitialNormalizedPhase = 0.f;
-  float servoYawInitialNormalizedPhase = 0.25f;
+  size_t stride = 1u;
+
   bool enableLaser = false;
   int gpioNrForLaser = DEFAULT_GPIO_NR_FOR_LASER;
 
@@ -178,16 +212,6 @@ main(int argc, char* argv[])
       if (currentArg == "--help") {
         printHelp();
         return 0;
-      } else if (currentArg == "--updateStep") {
-        updateStep = atof(argv[++i]);
-      } else if (currentArg == "--servoPitchFreq") {
-        servoPitchFreq = atof(argv[++i]);
-      } else if (currentArg == "--servoYawFreq") {
-        servoYawFreq = atof(argv[++i]);
-      } else if (currentArg == "--servoPitchIP") {
-        servoPitchInitialNormalizedPhase = atof(argv[++i]);
-      } else if (currentArg == "--servoYawIP") {
-        servoYawInitialNormalizedPhase = atof(argv[++i]);
       } else if (currentArg == "--enableLaser") {
         gpioNrForLaser = atoi(argv[++i]);
         enableLaser = true;
@@ -199,19 +223,29 @@ main(int argc, char* argv[])
         servoYawMinNsDutyCycle = atoi(argv[++i]);
       } else if (currentArg == "--servoYawMaxValInNs") {
         servoYawMaxNsDutyCycle = atoi(argv[++i]);
-      } else if (currentArg == "--spiral") {
-        cyclesForSpiral = atoi(argv[++i]);
+      } else if (currentArg == "--waitBetweenPaths") {
+        waitBetweenPaths = atoi(argv[++i]);
+      } else if (currentArg == "--waitBetweenCycles") {
+        waitBetweenCycles = atoi(argv[++i]);
+      } else if (currentArg == "--stride") {
+        stride = atoi(argv[++i]);
+      } else if (currentArg == "--updateSleepInMs") {
+        updateSleepInMs = atoi(argv[++i]);
+      } else if (currentArg == "--file") {
+        jsonFilename = argv[++i];
       } else {
         printHelp();
         return -1;
       }
     }
   }
+
+  auto pathVector = jsonFilename == "" ? test : ParseJson(jsonFilename);
+
   std::signal(SIGINT, signalHandler);
 
-  const auto servoPitchInitialPhase = servoPitchInitialNormalizedPhase * twoPi;
-  const auto servoYawInitialPhase = servoYawInitialNormalizedPhase * twoPi;
-
+  auto waitBetweenPathsInMs = waitBetweenPaths * updateSleepInMs;
+  auto waitBetweenCyclesInMs = waitBetweenCycles * updateSleepInMs;
   LaserPointer laserPointer(gpioNrForLaser);
   auto servoPitch = Servo(SERVO_PITCH_PWM_CHIP_NR,
                           SERVO_PITCH_PWM_NR,
@@ -229,30 +263,40 @@ main(int argc, char* argv[])
     laserPointer.setValue(true);
   }
 
-  size_t currentCycle = 0;
-  double currentGain = cyclesForSpiral == 0 ? 1. : 0.;
   while (!signalReceived) {
-
-    if (cyclesForSpiral != 0) {
-      currentGain = static_cast<double>(currentCycle) / cyclesForSpiral;
-    }
-    for (float f = 0.f; f < twoPi; f += updateStep) {
-      if (signalReceived) {
-        break;
+    for (auto svg : { pathVector }) {
+      for (auto path : svg) {
+        size_t counter = 0;
+        if (enableLaser) {
+          laserPointer.setValue(true);
+        }
+        for (std::pair<double, double> x_y : path) {
+          if (signalReceived) {
+            break;
+          }
+          if (counter++ % stride == 0) {
+            servoYaw.setValue(-1.f * std::get<0>(x_y));
+            servoPitch.setValue(-1.f * std::get<1>(x_y));
+            std::this_thread::sleep_for(
+              std::chrono::milliseconds(updateSleepInMs));
+          }
+        }
+        if (enableLaser) {
+          laserPointer.setValue(false);
+        }
+        if (signalReceived) {
+          break;
+        }
+        std::this_thread::sleep_for(
+          std::chrono::milliseconds(waitBetweenPathsInMs));
       }
-      servoPitch.setValue(currentGain *
-                          sin(servoPitchInitialPhase + f * servoPitchFreq));
-      servoYaw.setValue(currentGain *
-                        sin(servoYawInitialPhase + f * servoYawFreq));
-      std::this_thread::sleep_for(std::chrono::milliseconds(updateSleepInMs));
-    }
-    if (cyclesForSpiral != 0 && ++currentCycle == cyclesForSpiral) {
-      currentCycle = 0;
+      laserPointer.setValue(false);
+      std::this_thread::sleep_for(
+        std::chrono::milliseconds(waitBetweenCyclesInMs));
     }
   }
   if (enableLaser) {
     laserPointer.disable();
   }
-
   return 0;
 }
